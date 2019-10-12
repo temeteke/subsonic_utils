@@ -56,7 +56,10 @@ for f in args.file:
     logger.debug('/'.join(directories))
     r = requests.get(urljoin(config['subsonic']['url'], "/rest/getMusicDirectory.view"), params={"u": config['subsonic']['user'], "p": config['subsonic']['password'], "v": "1.0.0", "c": Path(__file__).name, "id": folder_id})
     logger.debug(r.text)
-    song_id = lxml.etree.fromstring(r.content).xpath(f'//ns:child[@path="{"/".join(directories)}"]/@id', namespaces={'ns': 'http://subsonic.org/restapi'})[0]
+    try:
+        song_id = lxml.etree.fromstring(r.content).xpath(f'//ns:child[@path="{"/".join(directories)}"]/@id', namespaces={'ns': 'http://subsonic.org/restapi'})[0]
+    except IndexError:
+        continue
     logger.debug(f"song_id: {song_id}")
 
 
