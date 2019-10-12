@@ -37,39 +37,39 @@ for f in args.file:
     logger.debug(directory)
     r = requests.get(urljoin(config['subsonic']['url'], "/rest/getMusicFolders.view"), params={"u": config['subsonic']['user'], "p": config['subsonic']['password'], "v": "1.0.0", "c": Path(__file__).name})
     logger.debug(r.text)
-    folder_id = lxml.etree.fromstring(r.content).xpath(f"//ns:musicFolder[@name='{directory}']/@id", namespaces={'ns': 'http://subsonic.org/restapi'})[0]
+    folder_id = lxml.etree.fromstring(r.content).xpath(f'//ns:musicFolder[@name="{directory}"]/@id', namespaces={'ns': 'http://subsonic.org/restapi'})[0]
     logger.debug(folder_id)
 
     logger.debug(directories[0])
     r = requests.get(urljoin(config['subsonic']['url'], "/rest/getIndexes.view"), params={"u": config['subsonic']['user'], "p": config['subsonic']['password'], "v": "1.0.0", "c": Path(__file__).name, "musicFolderId": folder_id})
     logger.debug(r.text)
-    folder_id = lxml.etree.fromstring(r.content).xpath(f"//ns:artist[@name='{directories[0]}']/@id", namespaces={'ns': 'http://subsonic.org/restapi'})[0]
+    folder_id = lxml.etree.fromstring(r.content).xpath(f'//ns:artist[@name="{directories[0]}"]/@id', namespaces={'ns': 'http://subsonic.org/restapi'})[0]
     logger.debug(folder_id)
 
     for directory in directories[1:-1]:
         logger.debug(directory)
         r = requests.get(urljoin(config['subsonic']['url'], "/rest/getMusicDirectory.view"), params={"u": config['subsonic']['user'], "p": config['subsonic']['password'], "v": "1.0.0", "c": Path(__file__).name, "id": folder_id})
         logger.debug(r.text)
-        folder_id = lxml.etree.fromstring(r.content).xpath(f"//ns:child[@title='{directory}']/@id", namespaces={'ns': 'http://subsonic.org/restapi'})[0]
+        folder_id = lxml.etree.fromstring(r.content).xpath(f'//ns:child[@title="{directory}"]/@id', namespaces={'ns': 'http://subsonic.org/restapi'})[0]
         logger.debug(folder_id)
 
     logger.debug('/'.join(directories))
     r = requests.get(urljoin(config['subsonic']['url'], "/rest/getMusicDirectory.view"), params={"u": config['subsonic']['user'], "p": config['subsonic']['password'], "v": "1.0.0", "c": Path(__file__).name, "id": folder_id})
     logger.debug(r.text)
-    song_id = lxml.etree.fromstring(r.content).xpath(f"//ns:child[@path='{'/'.join(directories)}']/@id", namespaces={'ns': 'http://subsonic.org/restapi'})[0]
+    song_id = lxml.etree.fromstring(r.content).xpath(f'//ns:child[@path="{"/".join(directories)}"]/@id', namespaces={'ns': 'http://subsonic.org/restapi'})[0]
     logger.debug(f"song_id: {song_id}")
 
 
     # プレイリストを取得する
     r = requests.get(urljoin(config['subsonic']['url'], "/rest/getPlaylists.view"), params={"u": config['subsonic']['user'], "p": config['subsonic']['password'], "v": "1.0.0", "c": Path(__file__).name})
     logger.debug(r.text)
-    playlist_id = lxml.etree.fromstring(r.content).xpath(f"//ns:playlist[@name='{args.playlist}']/@id", namespaces={'ns': 'http://subsonic.org/restapi'})[0]
+    playlist_id = lxml.etree.fromstring(r.content).xpath(f'//ns:playlist[@name="{args.playlist}"]/@id', namespaces={'ns': 'http://subsonic.org/restapi'})[0]
     logger.debug(f"playlist_id: {playlist_id}")
 
     # 登録済みなら中止する
     r = requests.get(urljoin(config['subsonic']['url'], "/rest/getPlaylist.view"), params={"u": config['subsonic']['user'], "p": config['subsonic']['password'], "v": "1.0.0", "c": Path(__file__).name, "id": playlist_id})
     logger.debug(r.text)
-    if lxml.etree.fromstring(r.content).xpath(f"//ns:entry[@id='{song_id}']", namespaces={'ns': 'http://subsonic.org/restapi'}):
+    if lxml.etree.fromstring(r.content).xpath(f'//ns:entry[@id="{song_id}"]', namespaces={'ns': 'http://subsonic.org/restapi'}):
         logger.info("Already registered.")
         continue
 
