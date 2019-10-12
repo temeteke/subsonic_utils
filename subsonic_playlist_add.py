@@ -26,9 +26,19 @@ CONFIG_FILE = CONFIG_DIR / Path('config.ini')
 config = ConfigParser()
 config.read(CONFIG_FILE)
 
+history_file = CONFIG_DIR / Path(f'{Path(__file__).stem}_history_{args.playlist}')
+
 for f in args.file:
     f = Path(f).resolve()
     logger.info(f)
+
+    # 過去に登録済みなら中止する
+    if args.check_history and history_file.exists():
+        with history_file.open() as hf:
+            if str(f) in hf.read().splitlines():
+                logger.info("Already registered.")
+                continue
+
     directories = str(f.relative_to(config['subsonic']['root_dir'])).split('/')
     logger.debug(directories)
 
@@ -62,7 +72,6 @@ for f in args.file:
         continue
     logger.debug(f"song_id: {song_id}")
 
-
     # プレイリストを取得する
     r = requests.get(urljoin(config['subsonic']['url'], "/rest/getPlaylists.view"), params={"u": config['subsonic']['user'], "p": config['subsonic']['password'], "v": "1.0.0", "c": Path(__file__).name})
     logger.debug(r.text)
@@ -75,14 +84,6 @@ for f in args.file:
     if lxml.etree.fromstring(r.content).xpath(f'//ns:entry[@id="{song_id}"]', namespaces={'ns': 'http://subsonic.org/restapi'}):
         logger.info("Already registered.")
         continue
-
-    # 過去に登録済みなら中止する
-    history_file = CONFIG_DIR / Path(f'{Path(__file__).stem}_history_{args.playlist}')
-    if args.check_history and history_file.exists():
-        with history_file.open() as hf:
-            if str(f) in hf.read().splitlines():
-                logger.info("Already registered.")
-                continue
 
     # 登録する
     r = requests.get(urljoin(config['subsonic']['url'], "/rest/updatePlaylist.view"), params={"u": config['subsonic']['user'], "p": config['subsonic']['password'], "v": "1.0.0", "c": Path(__file__).name, "playlistId": playlist_id, "songIdToAdd": song_id})
